@@ -1,0 +1,9 @@
+[package]
+name = "passiogo_tui"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+ratatui = {version="0.30.0", features=["all-widgets"]}
+color-eyre = "0.6.5"
+passiogo_rs = "0.0.1"
