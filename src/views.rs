@@ -7,13 +7,14 @@ use ratatui::{
 use crate::{AppState, keys, ui};
 
 pub async fn sys_list(mut term: DefaultTerminal, state: &mut AppState) -> Result<()> {
+    if state.sys_state.systems_vec.is_empty() && !state.sys_state.loading {
+        state.sys_state.loading = true;
+        state.sys_state.systems_vec = state.client.get_systems().await.unwrap_or_default();
+        state.sys_state.loading = false;
+    }
+
     loop {
         // reqs
-        if state.sys_state.systems_vec.is_empty() && !state.sys_state.loading {
-            state.sys_state.loading = true;
-            state.sys_state.systems_vec = state.client.get_systems().await.unwrap_or_default();
-            state.sys_state.loading = false;
-        }
 
         // rendering
         term.draw(|f| ui::render(f, state))?;

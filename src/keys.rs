@@ -13,6 +13,9 @@ pub fn handler(state: &mut AppState) -> bool {
 
 pub fn handle_default(k: KeyEvent, state: &mut AppState) -> bool {
     match k.code {
+        event::KeyCode::Backspace => {
+            state.sys_state.system_id = None;
+        }
         event::KeyCode::Esc => return true,
         _ => {}
     }
@@ -28,6 +31,12 @@ pub fn handle_sys_list(k: KeyEvent, state: &mut AppState) -> bool {
             }
             'k' => {
                 state.sys_state.systems_list_state.select_previous();
+            }
+            'G' => {
+                state.sys_state.systems_list_state.select_last();
+            }
+            'g' => {
+                state.sys_state.systems_list_state.select_first();
             }
             _ => {}
         },
