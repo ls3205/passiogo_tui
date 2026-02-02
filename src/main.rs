@@ -4,8 +4,8 @@ use ratatui::{DefaultTerminal, widgets::ListState};
 use std::sync::Arc;
 
 mod keys;
-mod req;
 mod ui;
+mod views;
 
 #[derive(Default, Debug, Clone)]
 pub struct AppState {
@@ -26,21 +26,17 @@ async fn main() -> Result<()> {
     let mut state = AppState::default();
     let term = ratatui::init();
 
-    let res = run(term, &mut state);
+    let res = run(term, &mut state).await;
 
     ratatui::restore();
 
     res
 }
 
-fn run(mut term: DefaultTerminal, state: &mut AppState) -> Result<()> {
-    loop {
-        // rendering
-        term.draw(|f| ui::render(f, state))?;
-        // input handling
-        if keys::handler(state) {
-            break;
-        };
+async fn run(mut term: DefaultTerminal, state: &mut AppState) -> Result<()> {
+    if state.sys_state.system_id.is_none() {
+        let _ = views::sys_list(term, state).await;
     }
+
     Ok(())
 }

@@ -2,11 +2,10 @@ use ratatui::{
     Frame,
     layout::{Constraint, Layout},
     prelude::Widget,
-    style::{Color, Stylize},
+    style::{Color, Style, Stylize},
     text::ToSpan,
     widgets::{Block, BorderType, List, ListItem, Paragraph},
 };
-use tokio::sync::oneshot;
 
 use crate::AppState;
 
@@ -32,29 +31,6 @@ pub fn render(frame: &mut Frame, state: &mut AppState) {
 }
 
 fn render_list(frame: &mut Frame, state: &mut AppState) {
-    println!("Render list");
-    if state.sys_state.systems_vec.is_empty() && !state.sys_state.loading {
-        println!("Fetch list");
-        state.sys_state.loading = true;
-
-        let (tx, mut rx) = tokio::sync::oneshot::channel();
-        let client = state.client.clone();
-        let handle = tokio::runtime::Handle::current();
-        tokio::task::spawn_blocking(move || {
-            handle.block_on(async {
-                let data = client.get_systems().await.unwrap_or_default();
-                let _ = tx.send(data);
-            });
-        });
-
-        // let data = rx.try_recv();
-        let data = rx.blocking_recv();
-        println!("{:#?}", data);
-
-        state.sys_state.loading = false;
-        println!("End fetch");
-    }
-
     if state.sys_state.loading {
         let [area] = Layout::vertical([Constraint::Fill(1)]).areas(frame.area());
         let text_area = area.centered(Constraint::Percentage(25), Constraint::Percentage(25));
@@ -79,7 +55,9 @@ fn render_list(frame: &mut Frame, state: &mut AppState) {
         let list =
             List::new(state.sys_state.systems_vec.iter().map(|s| {
                 ListItem::from(s.name.clone().unwrap_or(s.id.to_string())).fg(Color::Green)
-            }));
+            }))
+            .highlight_symbol("> ")
+            .highlight_style(Style::default().fg(Color::Green));
 
         frame.render_stateful_widget(list, inner_area, &mut state.sys_state.systems_list_state);
     }
