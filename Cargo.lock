@@ -1232,9 +1232,9 @@ dependencies = [
 
 [[package]]
 name = "passiogo_rs"
-version = "0.0.1"
+version = "0.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "276528364f664ee54714a8c90cfd09f51571a30cfc2810a33f51a5f1918cfd19"
+checksum = "8969404afe147fabc5cfa821cd5df387d68d436776744032c0bd8bda39896aaa"
 dependencies = [
  "reqwest",
  "serde",
@@ -1250,6 +1250,7 @@ dependencies = [
  "color-eyre",
  "passiogo_rs",
  "ratatui",
+ "tokio",
 ]
 
 [[package]]
