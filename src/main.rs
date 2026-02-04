@@ -1,3 +1,4 @@
+use crate::views::types::Views;
 use color_eyre::eyre::Result;
 use passiogo_rs::PassioGoClient;
 use ratatui::{DefaultTerminal, widgets::ListState};
@@ -10,6 +11,7 @@ mod views;
 #[derive(Default, Debug, Clone)]
 pub struct AppState {
     client: Arc<PassioGoClient>,
+    view: Views,
     sys_state: SysState,
 }
 
@@ -34,8 +36,12 @@ async fn main() -> Result<()> {
 }
 
 async fn run(mut term: DefaultTerminal, state: &mut AppState) -> Result<()> {
-    if state.sys_state.system_id.is_none() {
-        let _ = views::sys_list(term, state).await;
+    match state.view {
+        Views::List => {
+            let _ = views::list::sys_list(term, state).await;
+        }
+        Views::Map => {}
+        _ => {}
     }
 
     Ok(())
