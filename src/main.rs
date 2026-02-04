@@ -13,6 +13,7 @@ pub struct AppState {
     client: Arc<PassioGoClient>,
     view: Views,
     sys_state: SysState,
+    map_state: MapState,
 }
 
 #[derive(Default, Debug, Clone)]
@@ -21,6 +22,16 @@ struct SysState {
     system_id: Option<u16>,
     systems_vec: Vec<passiogo_rs::TransportationSystemData>,
     systems_list_state: ListState,
+}
+
+#[derive(Default, Debug, Clone)]
+struct MapState {
+    loading: bool,
+    routes: Vec<passiogo_rs::RouteData>,
+    stops: Vec<passiogo_rs::StopData>,
+    buses: Vec<passiogo_rs::VehicleData>,
+    alerts: Vec<passiogo_rs::SystemAlertData>,
+    last_fetched: chrono::DateTime<chrono::Local>,
 }
 
 #[tokio::main]
@@ -40,7 +51,9 @@ async fn run(mut term: DefaultTerminal, state: &mut AppState) -> Result<()> {
         Views::List => {
             let _ = views::list::sys_list(term, state).await;
         }
-        Views::Map => {}
+        Views::Map => {
+            let _ = views::map::map(term, state).await;
+        }
         _ => {}
     }
 

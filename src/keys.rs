@@ -1,6 +1,6 @@
 use ratatui::crossterm::event::{self, Event, KeyEvent};
 
-use crate::AppState;
+use crate::{AppState, views::types::Views};
 
 pub fn handler(state: &mut AppState) -> bool {
     if let Ok(Event::Key(k)) = event::read() {
@@ -15,6 +15,7 @@ pub fn handle_default(k: KeyEvent, state: &mut AppState) -> bool {
     match k.code {
         event::KeyCode::Backspace => {
             state.sys_state.system_id = None;
+            state.view = Views::List;
         }
         event::KeyCode::Esc => return true,
         _ => {}
@@ -44,6 +45,7 @@ pub fn handle_sys_list(k: KeyEvent, state: &mut AppState) -> bool {
             if let Some(sys) = state.sys_state.systems_list_state.selected() {
                 if let Some(sys_item) = state.sys_state.systems_vec.get(sys) {
                     state.sys_state.system_id = Some(u16::try_from(sys_item.id).unwrap_or(0));
+                    state.view = Views::Map;
                 }
             }
         }
