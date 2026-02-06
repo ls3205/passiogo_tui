@@ -149,6 +149,7 @@ impl StatefulPage<pageID, GlobalState> for HomeScreen {
         let bottom = Paragraph::new(bottom_lines).block(
             Block::default()
                 .borders(Borders::ALL)
+                .border_type(ratatui::widgets::BorderType::Rounded)
                 .title("Search")
                 .fg(if self.search_mode {
                     Color::Green
