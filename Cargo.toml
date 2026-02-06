@@ -7,5 +7,6 @@ edition = "2024"
 ratatui = {version="0.30.0", features=["all-widgets"]}
 color-eyre = "0.6.5"
 passiogo_rs = "0.0.3"
-tokio = {version="1.49.0"}
+tokio = {version="1.49.0", features=["macros", "rt-multi-thread"]}
 chrono = "0.4.43"
+ratatui-recipe = "0.0.2"

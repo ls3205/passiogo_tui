@@ -1297,6 +1297,7 @@ dependencies = [
  "color-eyre",
  "passiogo_rs",
  "ratatui",
+ "ratatui-recipe",
  "tokio",
 ]
 
@@ -1557,6 +1558,28 @@ checksum = "a7f1342a13e83e4bb9d0b793d0ea762be633f9582048c892ae9041ef39c936f4"
 dependencies = [
  "ratatui-core",
  "ratatui-widgets",
+]
+
+[[package]]
+name = "ratatui-recipe"
+version = "0.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "29447ce3d9acf71f8ca15514598f9dd6a79a96da79b9439c491d14bc83c28c0a"
+dependencies = [
+ "ratatui",
+ "ratatui-recipe-macros",
+ "tokio",
+]
+
+[[package]]
+name = "ratatui-recipe-macros"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d023ef5546db667b2d82e287f7eb69bab42d62d46c6d1f34b0a0948494f69033"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.114",
 ]
 
 [[package]]
@@ -2393,9 +2416,9 @@ dependencies = [
 
 [[package]]
 name = "unicode-width"
-version = "0.2.2"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4ac048d71ede7ee76d585517add45da530660ef4390e49b098733c6e897f254"
+checksum = "1fc81956842c57dac11422a97c3b8195a1ff727f06e85c84ed2e8aa277c9a0fd"
 
 [[package]]
 name = "untrusted"
