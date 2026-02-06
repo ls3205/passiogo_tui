@@ -223,12 +223,8 @@ impl StatefulPage<pageID, GlobalState> for HomeScreen {
                         router.redraw();
                         return;
                     }
-                    let next = match self.list_state.selected() {
-                        Some(i) if i + 1 < len => Some(i + 1),
-                        Some(_) => Some(0),
-                        None => Some(0),
-                    };
-                    self.list_state.select(next);
+
+                    self.list_state.select_next();
                 }
                 KeyCode::Char('k') | KeyCode::Up => {
                     let len = self.filtered().len();
@@ -236,12 +232,8 @@ impl StatefulPage<pageID, GlobalState> for HomeScreen {
                         router.redraw();
                         return;
                     }
-                    let prev = match self.list_state.selected() {
-                        Some(i) if i > 0 => Some(i - 1),
-                        Some(_) => Some(len - 1),
-                        None => Some(0),
-                    };
-                    self.list_state.select(prev);
+
+                    self.list_state.select_previous();
                 }
                 KeyCode::Enter => {
                     if let Some(idx) = self.list_state.selected()
