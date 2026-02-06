@@ -49,7 +49,6 @@ impl StatefulPage<pageID, GlobalState> for HomeScreen {
             .direction(Direction::Vertical)
             .margin(2)
             .constraints([
-                Constraint::Length(3),
                 Constraint::Min(3),
                 Constraint::Length(if show_bottom { 3 } else { 0 }),
             ])
@@ -60,19 +59,11 @@ impl StatefulPage<pageID, GlobalState> for HomeScreen {
         } else {
             " PassioGo - Systems "
         };
-        let header = Paragraph::new(vec![
-            Line::from(header_text),
-            Line::from(""),
-            Line::from("Use j/k or ↑/↓ to navigate, / to search, Enter to select, Esc to exit"),
-        ])
-        .block(Block::default().borders(Borders::ALL));
-
-        frame.render_widget(header, chunks[0]);
 
         if self.loading {
             let loading = Paragraph::new(vec![Line::from("Loading systems...")])
                 .block(Block::default().borders(Borders::ALL).title("Systems"));
-            frame.render_widget(loading, chunks[1]);
+            frame.render_widget(loading, chunks[0]);
             return;
         }
 
@@ -81,7 +72,7 @@ impl StatefulPage<pageID, GlobalState> for HomeScreen {
         if filtered.is_empty() {
             let empty = Paragraph::new(vec![Line::from("No systems match the filter.")])
                 .block(Block::default().borders(Borders::ALL).title("Systems"));
-            frame.render_widget(empty, chunks[1]);
+            frame.render_widget(empty, chunks[0]);
         } else {
             let items: Vec<ListItem> = filtered
                 .into_iter()
@@ -105,6 +96,7 @@ impl StatefulPage<pageID, GlobalState> for HomeScreen {
                 .block(
                     Block::default()
                         .borders(Borders::ALL)
+                        .border_type(ratatui::widgets::BorderType::Rounded)
                         .title(header_text.to_span().into_centered_line())
                         .title_bottom(
                             "j/k ↑/↓: move  /: search  Enter: select  Esc: exit"
@@ -119,7 +111,7 @@ impl StatefulPage<pageID, GlobalState> for HomeScreen {
                 )
                 .highlight_symbol(">>");
 
-            frame.render_stateful_widget(list, chunks[1], &mut self.list_state);
+            frame.render_stateful_widget(list, chunks[0], &mut self.list_state);
         }
 
         let mut bottom_lines = vec![];
@@ -141,7 +133,7 @@ impl StatefulPage<pageID, GlobalState> for HomeScreen {
         );
 
         if show_bottom {
-            frame.render_widget(bottom, chunks[2])
+            frame.render_widget(bottom, chunks[1])
         };
     }
 
