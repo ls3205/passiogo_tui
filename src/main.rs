@@ -4,6 +4,7 @@ use ratatui_recipe::App;
 use crate::pages::AppPages;
 
 mod pages;
+mod utils;
 
 #[derive(Default, Debug)]
 pub struct GlobalState {
