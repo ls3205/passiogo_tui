@@ -248,7 +248,6 @@ impl StatefulPage<pageID, GlobalState> for HomeScreen {
                         && let Some(sys) = self.systems.get(idx)
                     {
                         state.system_id = Some(sys.id);
-                        println!("{:#?}", state.system_id);
                     }
                 }
                 KeyCode::Esc => {
