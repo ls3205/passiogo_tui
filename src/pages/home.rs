@@ -241,6 +241,7 @@ impl StatefulPage<pageID, GlobalState> for HomeScreen {
                         && let Some(sys) = self.systems.get(idx)
                     {
                         state.system = Some(sys.clone());
+                        router.push(pageID::Map);
                     }
                 }
                 KeyCode::Esc => {
