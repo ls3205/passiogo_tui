@@ -113,13 +113,13 @@ impl StatefulPage<pageID, GlobalState> for HomeScreen {
                 })
                 .collect();
 
-            if self.list_state.selected().is_none() {
-                self.list_state.select(Some(0));
-            } else if let Some(idx) = self.list_state.selected()
-                && idx >= items.len()
-            {
-                self.list_state.select(Some(0));
-            }
+            // if self.list_state.selected().is_none() {
+            //     self.list_state.select(Some(0));
+            // } else if let Some(idx) = self.list_state.selected()
+            //     && idx >= items.len()
+            // {
+            //     self.list_state.select(Some(0));
+            // }
 
             let list = List::new(items)
                 .block(
@@ -238,7 +238,7 @@ impl StatefulPage<pageID, GlobalState> for HomeScreen {
                 }
                 KeyCode::Enter => {
                     if let Some(idx) = self.list_state.selected()
-                        && let Some(sys) = self.systems.get(idx)
+                        && let Some(&sys) = self.filtered().get(idx)
                     {
                         state.system = Some(sys.clone());
                         router.push(pageID::Map);
