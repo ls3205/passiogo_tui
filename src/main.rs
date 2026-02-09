@@ -1,4 +1,4 @@
-use passiogo_rs::PassioGoClient;
+use passiogo_rs::{PassioGoClient, TransportationSystemData};
 use ratatui_recipe::App;
 
 use crate::pages::AppPages;
@@ -9,7 +9,7 @@ mod utils;
 #[derive(Default, Debug)]
 pub struct GlobalState {
     client: PassioGoClient,
-    system_id: Option<i64>,
+    system: Option<TransportationSystemData>,
 }
 
 #[tokio::main]

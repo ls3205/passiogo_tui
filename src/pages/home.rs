@@ -240,7 +240,7 @@ impl StatefulPage<pageID, GlobalState> for HomeScreen {
                     if let Some(idx) = self.list_state.selected()
                         && let Some(sys) = self.systems.get(idx)
                     {
-                        state.system_id = Some(sys.id);
+                        state.system = Some(sys.clone());
                     }
                 }
                 KeyCode::Esc => {
