@@ -22,6 +22,8 @@ pub struct MapScreen {
     last_fetched: DateTime<Local>,
 
     stop_matrix: Vec<Vec<StopData>>,
+    sel_r: usize,
+    sel_c: usize,
 }
 
 impl StatefulPage<pageID, GlobalState> for MapScreen {
@@ -109,6 +111,21 @@ impl StatefulPage<pageID, GlobalState> for MapScreen {
             let inner_w = inner.width.saturating_sub(2).max(1);
             let inner_h = inner.height.saturating_sub(2).max(1);
 
+            // compute selected stop lat/lon (if any) from the stop_matrix
+            let selected_pos: Option<(f64, f64)> =
+                if !self.stop_matrix.is_empty() && !self.stop_matrix[0].is_empty() {
+                    let r = self.sel_r.min(self.stop_matrix.len().saturating_sub(1));
+                    let c = self.sel_c.min(self.stop_matrix[0].len().saturating_sub(1));
+                    let s = &self.stop_matrix[r][c];
+                    if let (Some(slat), Some(slon)) = (s.latitude, s.longitude) {
+                        Some((slat, slon))
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
+
             for stop in valid_stops {
                 let lat = stop.latitude.unwrap();
                 let lon = stop.longitude.unwrap();
@@ -119,25 +136,59 @@ impl StatefulPage<pageID, GlobalState> for MapScreen {
                 let x = inner_x.saturating_add(x_rel.round() as u16);
                 let y = inner_y.saturating_add(y_rel.round() as u16);
 
-                let label = stop.name.clone().unwrap_or_default();
-                let display = if label.is_empty() {
-                    "•".to_string()
+                let is_selected = if let Some((slat, slon)) = selected_pos {
+                    (slat - lat).abs() < f64::EPSILON && (slon - lon).abs() < f64::EPSILON
                 } else {
-                    label
+                    false
                 };
 
-                for (i, ch) in display.chars().enumerate() {
-                    let px = x.saturating_add(i as u16);
-                    if px >= inner_x.saturating_add(inner_w) {
-                        break;
+                if is_selected {
+                    let label = stop.name.clone().unwrap_or_default();
+                    let display = if label.is_empty() {
+                        "*".to_string()
+                    } else {
+                        label
+                    };
+
+                    // determine starting x to avoid overflowing right edge: when overflowing, anchor right
+                    let label_len = display.chars().count() as u16;
+                    let mut start_x = x;
+                    let right_bound = inner_x.saturating_add(inner_w); // exclusive bound
+                    if (x as usize).saturating_add(label_len as usize) > right_bound as usize {
+                        // label would overflow to the right; anchor right
+                        if label_len >= inner_w {
+                            // too long to fit, start at leftmost inner_x
+                            start_x = inner_x;
+                        } else {
+                            let offset = label_len.saturating_sub(1);
+                            start_x = x.saturating_sub(offset);
+                            if start_x < inner_x {
+                                start_x = inner_x;
+                            }
+                        }
                     }
-                    if y >= inner_y.saturating_add(inner_h) {
-                        break;
+
+                    for (i, ch) in display.chars().enumerate() {
+                        let px = start_x.saturating_add(i as u16);
+                        if px >= inner_x.saturating_add(inner_w) {
+                            break;
+                        }
+                        if y >= inner_y.saturating_add(inner_h) {
+                            break;
+                        }
+                        if let Some(cell) = buf.cell_mut((px, y)) {
+                            let s = ch.to_string();
+                            cell.set_symbol(&s);
+                            cell.set_style(Style::default().fg(Color::Black).bg(Color::Yellow));
+                        }
                     }
-                    if let Some(cell) = buf.cell_mut((px, y)) {
-                        let s = ch.to_string();
-                        cell.set_symbol(&s);
-                        cell.set_style(Style::default().fg(Color::Yellow));
+                } else {
+                    // render simple icon for unselected stops
+                    if y < inner_y.saturating_add(inner_h) {
+                        if let Some(cell) = buf.cell_mut((x, y)) {
+                            cell.set_symbol("*");
+                            cell.set_style(Style::default().fg(Color::Yellow));
+                        }
                     }
                 }
             }
@@ -274,6 +325,21 @@ impl StatefulPage<pageID, GlobalState> for MapScreen {
             }
 
             self.stop_matrix = matrix;
+            // initialize selection to first valid stop in the matrix
+            self.sel_r = 0;
+            self.sel_c = 0;
+            for (r, row) in self.stop_matrix.iter().enumerate() {
+                for (c, s) in row.iter().enumerate() {
+                    if s.latitude.is_some() && s.longitude.is_some() {
+                        self.sel_r = r;
+                        self.sel_c = c;
+                        break;
+                    }
+                }
+                if self.stop_matrix[self.sel_r][self.sel_c].latitude.is_some() {
+                    break;
+                }
+            }
         }
     }
 
@@ -290,6 +356,94 @@ impl StatefulPage<pageID, GlobalState> for MapScreen {
                     state.system = None;
                 }
                 KeyCode::Esc => router.exit(),
+                KeyCode::Char('h') | KeyCode::Char('H') | KeyCode::Left => {
+                    // move left
+                    if !self.stop_matrix.is_empty() && !self.stop_matrix[0].is_empty() {
+                        let rows = self.stop_matrix.len();
+                        let cols = self.stop_matrix[0].len();
+                        let total = rows * cols;
+                        let mut idx = self.sel_r * cols + self.sel_c;
+                        let step = (total - 1) % total;
+                        for _ in 0..total {
+                            idx = (idx + step) % total;
+                            let r = idx / cols;
+                            let c = idx % cols;
+                            if self.stop_matrix[r][c].latitude.is_some()
+                                && self.stop_matrix[r][c].longitude.is_some()
+                            {
+                                self.sel_r = r;
+                                self.sel_c = c;
+                                break;
+                            }
+                        }
+                    }
+                }
+                KeyCode::Char('l') | KeyCode::Char('L') | KeyCode::Right => {
+                    // move right
+                    if !self.stop_matrix.is_empty() && !self.stop_matrix[0].is_empty() {
+                        let rows = self.stop_matrix.len();
+                        let cols = self.stop_matrix[0].len();
+                        let total = rows * cols;
+                        let mut idx = self.sel_r * cols + self.sel_c;
+                        let step = 1;
+                        for _ in 0..total {
+                            idx = (idx + step) % total;
+                            let r = idx / cols;
+                            let c = idx % cols;
+                            if self.stop_matrix[r][c].latitude.is_some()
+                                && self.stop_matrix[r][c].longitude.is_some()
+                            {
+                                self.sel_r = r;
+                                self.sel_c = c;
+                                break;
+                            }
+                        }
+                    }
+                }
+                KeyCode::Char('k') | KeyCode::Char('K') | KeyCode::Up => {
+                    // move up
+                    if !self.stop_matrix.is_empty() && !self.stop_matrix[0].is_empty() {
+                        let rows = self.stop_matrix.len();
+                        let cols = self.stop_matrix[0].len();
+                        let total = rows * cols;
+                        let mut idx = self.sel_r * cols + self.sel_c;
+                        let step = (total - cols) % total;
+                        for _ in 0..total {
+                            idx = (idx + step) % total;
+                            let r = idx / cols;
+                            let c = idx % cols;
+                            if self.stop_matrix[r][c].latitude.is_some()
+                                && self.stop_matrix[r][c].longitude.is_some()
+                            {
+                                self.sel_r = r;
+                                self.sel_c = c;
+                                break;
+                            }
+                        }
+                    }
+                }
+                KeyCode::Char('j') | KeyCode::Char('J') | KeyCode::Down => {
+                    // move down
+                    if !self.stop_matrix.is_empty() && !self.stop_matrix[0].is_empty() {
+                        let rows = self.stop_matrix.len();
+                        let cols = self.stop_matrix[0].len();
+                        let total = rows * cols;
+                        let mut idx = self.sel_r * cols + self.sel_c;
+                        let step = cols % total;
+                        for _ in 0..total {
+                            idx = (idx + step) % total;
+                            let r = idx / cols;
+                            let c = idx % cols;
+                            if self.stop_matrix[r][c].latitude.is_some()
+                                && self.stop_matrix[r][c].longitude.is_some()
+                            {
+                                self.sel_r = r;
+                                self.sel_c = c;
+                                break;
+                            }
+                        }
+                    }
+                }
                 _ => {}
             }
         }
